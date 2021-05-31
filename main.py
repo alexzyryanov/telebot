@@ -16,7 +16,7 @@ def hear_command(message):
         connect_db = sqlite3.connect("tele_bot.db")
         cursor = connect_db.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS bot_users
-                                (id_user INT, workouts TEXT, date TEXT, reps TEXT, weights TEXT)""")
+                                (id_user INT, exercise TEXT, date TEXT, rep TEXT, weight TEXT)""")
         connect_db.commit()
         cursor.execute("""INSERT INTO bot_users VALUES (?, ?, ?, ?, ?)""",
                        (message.from_user.id, None, date_now, None, None))
@@ -24,50 +24,50 @@ def hear_command(message):
         cursor.close()
         connect_db.close()
 
-        start_page = f"Привет {message.from_user.first_name}\n" \
-                     "/home - Домашняя страница\n" \
-                     "/help - Все команды бота"
+        start_page = f"Hello {message.from_user.first_name}\n" \
+                     "/home - Home\n" \
+                     "/help - All commands"
 
         bot.send_message(message.chat.id, start_page)
 
     elif message.text == "/home":
-        home_page = "Домашняя страница\n" \
-                    "/diary - Дневник тренировок"
+        home_page = "Home\n" \
+                    "/diary - Diary"
         bot.send_message(message.chat.id, home_page)
 
     elif message.text == "/diary":
-        diary_page = "Дневник тренировок\n" \
-                     "/add - Добавить повторения и вес\n" \
-                     "/add_new - Добавить новое упражнение\n" \
-                     "/show - Показать упражнения в дневнике"
+        diary_page = "Diary\n" \
+                     "/add - \n" \
+                     "/add_new - Add a new exercise\n" \
+                     "/show - Show exercises"
         bot.send_message(message.chat.id, diary_page)
 
     elif message.text == "/add":
         pass
 
     elif message.text == "/add_new":
-        bot.send_message(message.chat.id, "Введите название нового упражнения\n"
-                                          "/cancel - отменить ввод")
+        bot.send_message(message.chat.id, "Enter a name for the new exercise\n"
+                                          "/cancel - Cancel enter")
         bot.register_next_step_handler(message, save_add_new)
 
     elif message.text == "/show":
-        bot.send_message(message.chat.id, "Упражнения", reply_markup=show_diary(message))
+        bot.send_message(message.chat.id, "Exercises", reply_markup=show_diary(message))
 
     elif message.text == "/help":
-        help_page = "Все команды бота\n" \
-                    "/home - Домашняя страница\n" \
-                    "/diary - Дневник тренировок\n" \
-                    "/add - Добавить повторения и вес\n" \
-                    "/add_new - Добавить новое упражнение\n" \
-                    "/show - Показать упражнения в дневнике\n" \
-                    "/help - Все команды бота"
+        help_page = "All commands\n" \
+                    "/home - Home\n" \
+                    "/diary - Diary\n" \
+                    "/add - \n" \
+                    "/add_new - Add a new exercise\n" \
+                    "/show - Show exercises\n" \
+                    "/help - All commands"
         bot.send_message(message.chat.id, help_page)
 
 
 def save_add_new(message):
     if message.text == "/cancel":
         bot.disable_save_next_step_handlers()
-        bot.send_message(message.chat.id, "Ввод отменен")
+        bot.send_message(message.chat.id, "Enter canceled")
     else:
         connect_db = sqlite3.connect("tele_bot.db")
         cursor = connect_db.cursor()
@@ -76,16 +76,16 @@ def save_add_new(message):
         connect_db.commit()
         cursor.close()
         connect_db.close()
-        bot.send_message(message.chat.id, f"Упражнение {message.text} добавлено\n"
-                                          "/diary - Дневник тренировок\n"
-                                          "/help - Все команды бота")
+        bot.send_message(message.chat.id, f"Exercise {message.text} added\n"
+                                          "/diary - Diary\n"
+                                          "/help - All commands")
 
 
 def show_diary(message):
     connect_db = sqlite3.connect("tele_bot.db")
     cursor = connect_db.cursor()
     item_from_bd = []
-    param = f"""SELECT workouts FROM bot_users WHERE id_user = {message.from_user.id}"""
+    param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
     for i in cursor.execute(param):
         if type(i[0]) == str:
             item_from_bd.append(i[0])
@@ -111,9 +111,9 @@ def hear_callback(call):
         param = f"""SELECT * FROM bot_users WHERE id_user = {call.from_user.id}"""
         for i in cursor.execute(param):
             if i[1] == call_data:
-                show_about += f"Дата - {i[2]}\n" \
-                              f"Повторения - {i[3]}\n" \
-                              f"Вес - {i[4]}\n" \
+                show_about += f"Date - {i[2]}\n" \
+                              f"Reps - {i[3]}\n" \
+                              f"Weight - {i[4]}\n" \
                               "\n"
         cursor.close()
         connect_db.close()
