@@ -1,7 +1,7 @@
+from tok import token
 import telebot
 import sqlite3
 import datetime
-from tok import *
 
 
 bot = telebot.TeleBot(token)
@@ -16,7 +16,7 @@ def hear_command(message):
         connect_db = sqlite3.connect("tele_bot.db")
         cursor = connect_db.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS bot_users
-                    (id_user INT, workouts TEXT, date TEXT, reps TEXT, weights TEXT)""")
+                                (id_user INT, workouts TEXT, date TEXT, reps TEXT, weights TEXT)""")
         connect_db.commit()
         cursor.execute("""INSERT INTO bot_users VALUES (?, ?, ?, ?, ?)""",
                        (message.from_user.id, None, date_now, None, None))
@@ -29,9 +29,6 @@ def hear_command(message):
                      "/help - Все команды бота"
 
         bot.send_message(message.chat.id, start_page)
-
-    elif message.text == "hello":
-        bot.send_message(message.chat.id, "hailo")
 
     elif message.text == "/home":
         home_page = "Домашняя страница\n" \
@@ -100,12 +97,6 @@ def show_diary(message):
     all_button = [telebot.types.InlineKeyboardButton(text=i, callback_data=f"show_diary_{i}") for i in item_from_bd]
     keyboard.add(*all_button)
     return keyboard
-
-
-@bot.message_handler(content_types=["text"])
-def asdasd(message):
-    if message.text == "hello":
-        bot.send_message(message.chat.id, "hailo")
 
 
 @bot.callback_query_handler(func=lambda call: True)
