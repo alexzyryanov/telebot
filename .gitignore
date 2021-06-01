@@ -1,0 +1,11 @@
+
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/tele_bot.iml
+.idea/workspace.xml
+__pycache__/main.cpython-39.pyc
+__pycache__/tok.cpython-39.pyc
+tele_bot.db
+test.py
+tok.py
