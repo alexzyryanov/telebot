@@ -8,4 +8,5 @@ __pycache__/main.cpython-39.pyc
 __pycache__/tok.cpython-39.pyc
 tele_bot.db
 test.py
-tok.py
+config.py
+__pycache__/config.cpython-39.pyc
