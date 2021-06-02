@@ -43,7 +43,7 @@ def hear_command(message):
         bot.send_message(message.chat.id, diary_page)
 
     elif message.text == "/add":
-        pass
+        bot.send_message(message.chat.id, "Chose exercise", reply_markup=save_add(message))
 
     elif message.text == "/add_new":
         bot.send_message(message.chat.id, "Enter a name for the new exercise\n"
@@ -62,6 +62,29 @@ def hear_command(message):
                     "/show - Show exercises\n" \
                     "/help - All commands"
         bot.send_message(message.chat.id, help_page)
+
+
+def save_add(message):
+    connect_db = sqlite3.connect("tele_bot.db")
+    cursor = connect_db.cursor()
+    item_from_bd = []
+    param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
+    for i in cursor.execute(param):
+        if type(i[0]) == str:
+            item_from_bd.append(i[0])
+        else:
+            pass
+    cursor.close()
+    connect_db.close()
+    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    all_button = [telebot.types.InlineKeyboardButton(text=i) for i in item_from_bd]
+    keyboard.add(*all_button)
+    return keyboard
+
+
+def save_add_r_w(message):
+    data = message.text
+    print(data)
 
 
 def save_add_new(message):
@@ -99,13 +122,31 @@ def show_diary(message):
     return keyboard
 
 
+@bot.message_handler(content_types=["text"])
+def hear_text(message):
+    connect_db = sqlite3.connect("tele_bot.db")
+    cursor = connect_db.cursor()
+    item_from_bd = []
+    param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
+    for i in cursor.execute(param):
+        if type(i[0]) == str:
+            item_from_bd.append(i[0])
+        else:
+            pass
+
+    if message.text in item_from_bd:
+        bot.send_message(message.chat.id, "add your date")
+        bot.register_next_step_handler(message, save_add_r_w)
+    else:
+        pass
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def hear_callback(call):
     if "show_diary_" in call.data:
         call_data = call.data[11::]
         show_about = f"{call_data}\n" \
                      "\n"
-
         connect_db = sqlite3.connect("tele_bot.db")
         cursor = connect_db.cursor()
         param = f"""SELECT * FROM bot_users WHERE id_user = {call.from_user.id}"""
@@ -118,7 +159,6 @@ def hear_callback(call):
         cursor.close()
         connect_db.close()
         bot.send_message(call.message.chat.id, show_about)
-
     else:
         pass
 
