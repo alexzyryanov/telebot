@@ -82,11 +82,6 @@ def save_add(message):
     return keyboard
 
 
-def save_add_r_w(message):
-    data = message.text
-    print(data)
-
-
 def save_add_new(message):
     if message.text == "/cancel":
         bot.disable_save_next_step_handlers()
@@ -135,10 +130,29 @@ def hear_text(message):
             pass
 
     if message.text in item_from_bd:
-        bot.send_message(message.chat.id, "add your date")
-        bot.register_next_step_handler(message, save_add_r_w)
+        exercise = message.text
+        bot.send_message(message.chat.id, "add your reps", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.register_next_step_handler(message, save_add_r, exercise)
     else:
         pass
+
+
+def save_add_r(message, exercise):
+    reps = message.text
+    bot.send_message(message.chat.id, "add your weights")
+    bot.register_next_step_handler(message, save_add_w, exercise, reps)
+
+
+def save_add_w(message, exercise, reps):
+    weight = message.text
+    connect_db = sqlite3.connect("tele_bot.db")
+    cursor = connect_db.cursor()
+    cursor.execute("""INSERT INTO bot_users VALUES (?, ?, ?, ?, ?)""",
+                   (message.from_user.id, exercise, date_now, reps, weight))
+    connect_db.commit()
+    cursor.close()
+    connect_db.close()
+    bot.send_message(message.chat.id, "save")
 
 
 @bot.callback_query_handler(func=lambda call: True)
