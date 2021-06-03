@@ -1,13 +1,12 @@
-from tok import token
+from config import token
 import telebot
 import sqlite3
 import datetime
 
 
 bot = telebot.TeleBot(token)
-
 date_now = datetime.datetime.now().strftime("%d.%m.%y")
-all_commands = ["start", "home", "diary", "add", "add_new", "show", "help"]
+all_commands = ["start", "add", "add_new", "show", "help"]
 
 
 @bot.message_handler(commands=all_commands)
@@ -25,28 +24,19 @@ def hear_command(message):
         connect_db.close()
 
         start_page = f"Hello {message.from_user.first_name}\n" \
-                     "/home - Home\n" \
-                     "/help - All commands"
-
-        bot.send_message(message.chat.id, start_page)
-
-    elif message.text == "/home":
-        home_page = "Home\n" \
-                    "/diary - Diary"
-        bot.send_message(message.chat.id, home_page)
-
-    elif message.text == "/diary":
-        diary_page = "Diary\n" \
-                     "/add - \n" \
+                     "\n" \
+                     "/add - Add reps and weight\n" \
                      "/add_new - Add a new exercise\n" \
-                     "/show - Show exercises"
-        bot.send_message(message.chat.id, diary_page)
+                     "/show - Show exercises\n" \
+                     "/help - All commands"
+        bot.send_message(message.chat.id, start_page)
 
     elif message.text == "/add":
         bot.send_message(message.chat.id, "Chose exercise", reply_markup=save_add(message))
 
     elif message.text == "/add_new":
         bot.send_message(message.chat.id, "Enter a name for the new exercise\n"
+                                          "\n"
                                           "/cancel - Cancel enter")
         bot.register_next_step_handler(message, save_add_new)
 
@@ -55,9 +45,8 @@ def hear_command(message):
 
     elif message.text == "/help":
         help_page = "All commands\n" \
-                    "/home - Home\n" \
-                    "/diary - Diary\n" \
-                    "/add - \n" \
+                    "\n" \
+                    "/add - Add reps and weight\n" \
                     "/add_new - Add a new exercise\n" \
                     "/show - Show exercises\n" \
                     "/help - All commands"
@@ -70,10 +59,9 @@ def save_add(message):
     item_from_bd = []
     param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
     for i in cursor.execute(param):
-        if type(i[0]) == str:
-            item_from_bd.append(i[0])
-        else:
-            pass
+        if i[0] is not None:
+            if i[0] not in item_from_bd:
+                item_from_bd.append(i[0])
     cursor.close()
     connect_db.close()
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -85,7 +73,9 @@ def save_add(message):
 def save_add_new(message):
     if message.text == "/cancel":
         bot.disable_save_next_step_handlers()
-        bot.send_message(message.chat.id, "Enter canceled")
+        bot.send_message(message.chat.id, "Enter canceled\n"
+                                          "\n"
+                                          "/help - All commands")
     else:
         connect_db = sqlite3.connect("tele_bot.db")
         cursor = connect_db.cursor()
@@ -95,7 +85,7 @@ def save_add_new(message):
         cursor.close()
         connect_db.close()
         bot.send_message(message.chat.id, f"Exercise {message.text} added\n"
-                                          "/diary - Diary\n"
+                                          "\n"
                                           "/help - All commands")
 
 
@@ -105,10 +95,9 @@ def show_diary(message):
     item_from_bd = []
     param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
     for i in cursor.execute(param):
-        if type(i[0]) == str:
-            item_from_bd.append(i[0])
-        else:
-            pass
+        if i[0] is not None:
+            if i[0] not in item_from_bd:
+                item_from_bd.append(i[0])
     cursor.close()
     connect_db.close()
     keyboard = telebot.types.InlineKeyboardMarkup()
@@ -124,22 +113,19 @@ def hear_text(message):
     item_from_bd = []
     param = f"""SELECT exercise FROM bot_users WHERE id_user = {message.from_user.id}"""
     for i in cursor.execute(param):
-        if type(i[0]) == str:
-            item_from_bd.append(i[0])
-        else:
-            pass
+        if i[0] is not None:
+            if i[0] not in item_from_bd:
+                item_from_bd.append(i[0])
 
     if message.text in item_from_bd:
         exercise = message.text
-        bot.send_message(message.chat.id, "add your reps", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Add your reps", reply_markup=telebot.types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, save_add_r, exercise)
-    else:
-        pass
 
 
 def save_add_r(message, exercise):
     reps = message.text
-    bot.send_message(message.chat.id, "add your weights")
+    bot.send_message(message.chat.id, "Add your weights")
     bot.register_next_step_handler(message, save_add_w, exercise, reps)
 
 
@@ -152,7 +138,13 @@ def save_add_w(message, exercise, reps):
     connect_db.commit()
     cursor.close()
     connect_db.close()
-    bot.send_message(message.chat.id, "save")
+    bot.send_message(message.chat.id, "Your\n"
+                                      f"exercise - {exercise}\n"
+                                      f"reps - {reps}\n"
+                                      f"weights - {weight}\n"
+                                      "save\n"
+                                      "\n"
+                                      "/help - All commands")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -173,8 +165,9 @@ def hear_callback(call):
         cursor.close()
         connect_db.close()
         bot.send_message(call.message.chat.id, show_about)
-    else:
-        pass
+        bot.send_message(call.message.chat.id, "/help - All commands")
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text="History", reply_markup=None)
 
 
 def main():
