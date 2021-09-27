@@ -16,11 +16,12 @@ def hear_command(message):
                      "/add - Add reps and weight\n" \
                      "/add_new - Add a new exercise\n" \
                      "/show - Show history\n" \
+                     "\n" \
                      "/help - All commands"
         bot.send_message(message.chat.id, start_page)
 
     elif message.text == "/add":
-        bot.send_message(message.chat.id, "Chose exercise", reply_markup=save_add(message))
+        save_add(message)
 
     elif message.text == "/add_new":
         bot.send_message(message.chat.id, "Enter a name for the new exercise\n"
@@ -29,7 +30,7 @@ def hear_command(message):
         bot.register_next_step_handler(message, add_new_exercise)
 
     elif message.text == "/show":
-        bot.send_message(message.chat.id, "Exercises", reply_markup=show_diary(message))
+        show_diary(message)
 
     elif message.text == "/help":
         help_page = "All commands\n" \
@@ -37,6 +38,7 @@ def hear_command(message):
                     "/add - Add reps and weight\n" \
                     "/add_new - Add a new exercise\n" \
                     "/show - Show history\n" \
+                    "\n" \
                     "/help - All commands"
         bot.send_message(message.chat.id, help_page)
 
@@ -93,10 +95,18 @@ def save_add(message):
     cursor.close()
     connect_db.close()
 
-    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    all_button = [telebot.types.InlineKeyboardButton(text=i) for i in item_from_db]
-    keyboard.add(*all_button)
-    return keyboard
+    if len(item_from_db) == 0:
+        bot.send_message(message.chat.id, "You need to add an exercise\n"
+                                          "\n"
+                                          "/add_new - Add a new exercise\n"
+                                          "\n"
+                                          "/help - All commands")
+
+    else:
+        keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+        all_button = [telebot.types.InlineKeyboardButton(text=i) for i in item_from_db]
+        keyboard.add(*all_button)
+        bot.send_message(message.chat.id, "Chose exercise", reply_markup=keyboard)
 
 
 def save_add_r(message, exercise):
@@ -134,6 +144,7 @@ def add_new_exercise(message):
                       "/add - Add reps and weight\n" \
                       "/add_new - Add a new exercise\n" \
                       "/show - Show history\n" \
+                      "\n" \
                       "/help - All commands"
         bot.send_message(message.chat.id, cancel_page)
     else:
@@ -150,6 +161,7 @@ def add_new_exercise(message):
                             "/add - Add reps and weight\n" \
                             "/add_new - Add a new exercise\n" \
                             "/show - Show history\n" \
+                            "\n" \
                             "/help - All commands"
         bot.send_message(message.chat.id, add_exercise_page)
 
@@ -166,10 +178,19 @@ def show_diary(message):
     cursor.close()
     connect_db.close()
 
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    all_button = [telebot.types.InlineKeyboardButton(text=i, callback_data=f"show_diary_{i}") for i in item_from_db]
-    keyboard.add(*all_button)
-    return keyboard
+    if len(item_from_db) == 0:
+        bot.send_message(message.chat.id, "No data yet, add exercise or your values\n"
+                                          "\n"
+                                          "/add - Add reps and weight\n"
+                                          "/add_new - Add a new exercise\n"
+                                          "\n"
+                                          "/help - All commands")
+
+    else:
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        all_button = [telebot.types.InlineKeyboardButton(text=i, callback_data=f"show_diary_{i}") for i in item_from_db]
+        keyboard.add(*all_button)
+        bot.send_message(message.chat.id, "Exercises", reply_markup=keyboard)
 
 
 def main():
