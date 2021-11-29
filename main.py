@@ -1,6 +1,4 @@
-import telebot
-import sqlite3
-import datetime
+import telebot, sqlite3, datetime
 
 
 bot = telebot.TeleBot("token")
